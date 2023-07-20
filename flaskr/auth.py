@@ -9,9 +9,10 @@ from flaskr.db import get_db
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
+
+
+
 @bp.route('/register', methods=('GET', 'POST'))
-
-
 def register():
     if request.method == 'POST':
         username = request.form['username']
@@ -91,3 +92,23 @@ def login_required(view):
         return view(**kwargs)
 
     return wrapped_view
+
+@bp.route('/delete_account' , methods=('GET', 'POST'))
+def delete_account():
+     if request.method == 'GET':
+        db = get_db()
+    
+        user_id = session.get('user_id')
+        user = get_db().execute('SELECT * FROM user WHERE id = ?', (user_id,)).fetchone()
+        user_name = user['username']
+        get_db().execute('DELETE FROM user WHERE username = ?', (user_name,)) #deletes user from user table
+        db.commit()
+
+        get_db().execute('DELETE FROM post WHERE author_id = ?', (user_id,)) #deletes post associate with the user
+        db.commit()
+        
+        session.clear() #clear the session
+        return redirect(url_for('index')) #redirect to index page 
+
+
+
